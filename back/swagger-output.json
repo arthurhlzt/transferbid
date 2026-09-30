@@ -1,0 +1,814 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "API - Agenciamento de Transferência de Jogadores",
+    "description": "Documentação da API do sistema de agenciamento de transferência de jogadores para clubes. Rotas protegidas exigem um token JWT: faça login em /clubes/login ou /admin/login, copie o token e clique em \"Authorize\" abaixo, informando: Bearer SEU_TOKEN",
+    "version": "1.0.0"
+  },
+  "basePath": "/",
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Informe: Bearer SEU_TOKEN (token retornado por /clubes/login ou /admin/login)"
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/swagger.json": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/posicoes/": {
+      "get": {
+        "tags": [
+          "Posições"
+        ],
+        "summary": "Lista todas as posições",
+        "description": "Retorna a lista de posições cadastradas (Goleiro, Zagueiro, Lateral, Volante, Meia, Atacante...), usadas para classificar os jogadores.",
+        "responses": {
+          "200": {
+            "description": "Lista de posições retornada com sucesso."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Posições"
+        ],
+        "summary": "Cadastra uma posição",
+        "description": "Cria uma nova posição, usada na classificação dos jogadores.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Atacante"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Posição cadastrada com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos."
+          },
+          "401": {
+            "description": "Não autenticado."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/posicoes/{id}": {
+      "delete": {
+        "tags": [
+          "Posições"
+        ],
+        "summary": "Exclui uma posição",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Código da posição"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Posição excluída com sucesso."
+          },
+          "400": {
+            "description": "Não foi possível excluir (posição em uso ou inexistente)."
+          },
+          "401": {
+            "description": "Não autenticado."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Posições"
+        ],
+        "summary": "Atualiza uma posição",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Código da posição"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Meia"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Posição atualizada com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos."
+          },
+          "401": {
+            "description": "Não autenticado."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/jogadores/": {
+      "get": {
+        "tags": [
+          "Jogadores"
+        ],
+        "summary": "Lista jogadores (com filtros opcionais)",
+        "description": "Retorna jogadores cadastrados, combinando os filtros informados (todos opcionais e combináveis com AND).",
+        "parameters": [
+          {
+            "name": "destaque",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Quando igual a true, retorna somente os jogadores com destaque = true"
+          },
+          {
+            "name": "nome",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Filtra por nome, clube atual ou nacionalidade contendo o texto informado"
+          },
+          {
+            "name": "posicaoId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "description": "Filtra pela posição informada"
+          },
+          {
+            "name": "valorMaximo",
+            "in": "query",
+            "required": false,
+            "type": "number",
+            "description": "Filtra jogadores com valorPedido menor ou igual ao informado"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de jogadores retornada com sucesso."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Jogadores"
+        ],
+        "summary": "Cadastra um jogador",
+        "description": "Cria um novo jogador e, em seguida, consulta a IA (Gemini) para complementar automaticamente pontos fortes, pontos fracos, estilo de jogo, jogador comparável e potencial de mercado. Requer autenticação de administrador.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Rafael Andrade"
+                },
+                "idade": {
+                  "type": "number",
+                  "example": 22
+                },
+                "nacionalidade": {
+                  "type": "string",
+                  "example": "Brasil"
+                },
+                "clubeAtual": {
+                  "type": "string",
+                  "example": "Grêmio Náutico"
+                },
+                "pernaBoa": {
+                  "type": "string",
+                  "example": "DESTRA"
+                },
+                "valorPedido": {
+                  "type": "number",
+                  "example": 8500000
+                },
+                "foto": {
+                  "type": "string",
+                  "example": "https://exemplo.com/foto.jpg"
+                },
+                "posicaoId": {
+                  "type": "number",
+                  "example": 1
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Jogador cadastrado (e enriquecido pela IA) com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos."
+          },
+          "401": {
+            "description": "Não autenticado."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/jogadores/{id}": {
+      "get": {
+        "tags": [
+          "Jogadores"
+        ],
+        "summary": "Detalha um jogador",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Código do jogador"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jogador encontrado."
+          },
+          "404": {
+            "description": "Jogador não encontrado."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Jogadores"
+        ],
+        "summary": "Atualiza um jogador",
+        "description": "Requer autenticação de administrador. Para alternar apenas o destaque, prefira PATCH /jogadores/{id}/destaque.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Código do jogador"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jogador atualizado com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos."
+          },
+          "401": {
+            "description": "Não autenticado."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Jogadores"
+        ],
+        "summary": "Exclui um jogador",
+        "description": "Requer autenticação de administrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Código do jogador"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jogador excluído com sucesso."
+          },
+          "400": {
+            "description": "Não foi possível excluir."
+          },
+          "401": {
+            "description": "Não autenticado."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/jogadores/{id}/destaque": {
+      "patch": {
+        "tags": [
+          "Jogadores"
+        ],
+        "summary": "Alterna o destaque de um jogador",
+        "description": "Atualiza apenas o campo destaque, sem precisar reenviar o restante dos dados do jogador. Requer autenticação de administrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Código do jogador"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "destaque": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Destaque atualizado com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/clubes/": {
+      "post": {
+        "tags": [
+          "Clubes"
+        ],
+        "summary": "Cadastra um clube",
+        "description": "Cria um novo clube (cliente do sistema), que poderá fazer login e enviar propostas por jogadores.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "FC Exemplo"
+                },
+                "pais": {
+                  "type": "string",
+                  "example": "Brasil"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "diretoria@fcexemplo.com"
+                },
+                "senha": {
+                  "type": "string",
+                  "example": "123456"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Clube cadastrado com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos ou e-mail já utilizado."
+          }
+        }
+      }
+    },
+    "/clubes/login": {
+      "post": {
+        "tags": [
+          "Clubes"
+        ],
+        "summary": "Login do clube",
+        "description": "Autentica o clube e retorna um token JWT. O front-end guarda o token (em memória e, se \"Manter Conectado\", também no LocalStorage) e o envia no cabeçalho Authorization das próximas requisições.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "diretoria@fcexemplo.com"
+                },
+                "senha": {
+                  "type": "string",
+                  "example": "123456"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso."
+          },
+          "400": {
+            "description": "E-mail ou senha inválidos."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/clubes/me": {
+      "get": {
+        "tags": [
+          "Clubes"
+        ],
+        "summary": "Dados do clube autenticado",
+        "description": "Retorna os dados do clube dono do token enviado no cabeçalho Authorization. Usada para restaurar a sessão ao reabrir o front-end.",
+        "responses": {
+          "200": {
+            "description": "Clube encontrado."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/propostas/": {
+      "get": {
+        "tags": [
+          "Propostas"
+        ],
+        "summary": "Lista todas as propostas",
+        "description": "Retorna todas as propostas do sistema, com os dados do jogador e do clube (sem a senha). Requer autenticação de administrador.",
+        "responses": {
+          "200": {
+            "description": "Lista de propostas retornada com sucesso."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Propostas"
+        ],
+        "summary": "Cria uma proposta",
+        "description": "O clube autenticado (via token) faz uma proposta por um jogador. O clube da proposta é sempre o do token, não um valor enviado pelo corpo.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "valorOferta": {
+                  "type": "number",
+                  "example": 8000000
+                },
+                "mensagem": {
+                  "type": "string",
+                  "example": "Pago 6 milhões à vista e 2 milhões em 3x"
+                },
+                "jogadorId": {
+                  "type": "number",
+                  "example": 1
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Proposta criada com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos ou jogador indisponível."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/propostas/minhas": {
+      "get": {
+        "tags": [
+          "Propostas"
+        ],
+        "summary": "Lista as propostas do clube autenticado",
+        "description": "Retorna as propostas feitas pelo clube dono do token enviado (não é possível ver propostas de outro clube). Usada na tela \"Minhas Propostas\".",
+        "responses": {
+          "200": {
+            "description": "Lista de propostas do clube retornada com sucesso."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/propostas/{id}": {
+      "put": {
+        "tags": [
+          "Propostas"
+        ],
+        "summary": "Responde/atualiza uma proposta",
+        "description": "Usada pelo administrador para aceitar, recusar e responder uma proposta. Ao aceitar, o jogador é marcado como TRANSFERIDO, retirado dos destaques e as demais propostas pendentes por ele são recusadas automaticamente. Requer autenticação de administrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Código da proposta"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "resposta": {
+                  "type": "string",
+                  "example": "Ok. Aceitamos a proposta."
+                },
+                "status": {
+                  "type": "string",
+                  "example": "ACEITA"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proposta atualizada com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Propostas"
+        ],
+        "summary": "Exclui uma proposta",
+        "description": "Requer autenticação de administrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Código da proposta"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proposta excluída com sucesso."
+          },
+          "400": {
+            "description": "Não foi possível excluir."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/login": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Login do administrador",
+        "description": "Autentica o administrador e retorna um token JWT, usado no cabeçalho Authorization para acessar a área restrita.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "admin@agencia.com"
+                },
+                "senha": {
+                  "type": "string",
+                  "example": "admin123"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso."
+          },
+          "400": {
+            "description": "E-mail ou senha inválidos."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Dados da Dashboard",
+        "description": "Retorna as contagens gerais e as agregações usadas nos gráficos da área restrita. Requer autenticação de administrador.",
+        "responses": {
+          "200": {
+            "description": "Dados da Dashboard retornados com sucesso."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  }
+}

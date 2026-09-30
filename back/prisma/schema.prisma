@@ -1,0 +1,118 @@
+// Prisma schema - Sistema de Agenciamento de Transferência de Jogadores
+// Baseado no projeto de referência (full_262_back) - Prof. Edécio Fernando Iepsen
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Tabela de apoio (equivalente a "Marca" no exemplo de carros)
+model Posicao {
+  id       Int       @id @default(autoincrement())
+  nome     String    @db.VarChar(30) // Ex: Atacante, Meia, Zagueiro, Goleiro...
+  jogadores Jogador[]
+
+  @@map("posicoes")
+}
+
+// Tabela principal (equivalente a "Carro" no exemplo)
+model Jogador {
+  id                  Int        @id @default(autoincrement())
+  nome                String     @db.VarChar(80)
+  idade               Int        @db.SmallInt
+  nacionalidade       String     @db.VarChar(40)
+  clubeAtual          String     @db.VarChar(60)
+  pernaBoa            PernaBoa   @default(DESTRA)
+  valorPedido          Decimal    @db.Decimal(12, 2)
+  foto                String
+  videoDestaque       String?
+  status              StatusJogador @default(DISPONIVEL)
+  destaque            Boolean    @default(true)
+
+  // Campos preenchidos pela consulta à IA (Gemini)
+  pontosFortes        String?    @db.Text
+  pontosFracos        String?    @db.Text
+  estiloDeJogo        String?    @db.Text
+  jogadorComparavel   String?    @db.VarChar(80)
+  potencialMercado    String?    @db.VarChar(30)
+  // true somente quando pontosFortes/pontosFracos/... vieram de uma consulta real
+  // ao Gemini (ver services/iaServices.ts). Dado ilustrativo de seed fica false.
+  analiseIA           Boolean    @default(false)
+
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  posicao             Posicao    @relation(fields: [posicaoId], references: [id])
+  posicaoId           Int
+
+  propostas           Proposta[]
+
+  @@map("jogadores")
+}
+
+// Clientes do sistema (equivalente a "Cliente"): clubes interessados que se cadastram
+// id é um UUID (string) para poder ser salvo no LocalStorage do front-end (requisito 5)
+model Clube {
+  id          String     @id @default(uuid())
+  nome        String     @db.VarChar(80)
+  pais        String     @db.VarChar(50)
+  email       String     @unique @db.VarChar(120)
+  senha       String     @db.VarChar(255)
+  createdAt   DateTime   @default(now())
+
+  propostas   Proposta[]
+
+  @@map("clubes")
+}
+
+// Interação dos clientes sobre a tabela principal (equivalente a "proposta/avaliação")
+model Proposta {
+  id           Int             @id @default(autoincrement())
+  valorOferta  Decimal         @db.Decimal(12, 2)
+  mensagem     String          @db.Text
+  resposta     String?         @db.Text
+  status       StatusProposta  @default(PENDENTE)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  jogador      Jogador         @relation(fields: [jogadorId], references: [id])
+  jogadorId    Int
+
+  clube        Clube           @relation(fields: [clubeId], references: [id])
+  clubeId      String
+
+  @@map("propostas")
+}
+
+// Administradores do sistema (o empresário e sua equipe)
+model Admin {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(80)
+  email     String   @unique @db.VarChar(120)
+  senha     String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+
+  @@map("admins")
+}
+
+enum PernaBoa {
+  DESTRA
+  CANHOTA
+  AMBIDESTRO
+}
+
+enum StatusJogador {
+  DISPONIVEL
+  EM_NEGOCIACAO
+  TRANSFERIDO
+}
+
+enum StatusProposta {
+  PENDENTE
+  ACEITA
+  RECUSADA
+}

@@ -241,7 +241,27 @@ router.post("/:id/analise-ia", authAdmin, async (req, res) => {
         jogador.posicao.nome,
         jogador.clubeAtual,
       )
-    } catch {
+    } catch (erro: unknown) {
+      const detalhe = erro as {
+        name?: string
+        status?: number
+        message?: string
+      }
+
+      const chave = process.env.GEMINI_API_KEY
+      const mensagem = String(detalhe?.message ?? "Erro sem mensagem")
+      const mensagemSegura = chave
+        ? mensagem.split(chave).join("[CHAVE OCULTADA]")
+        : mensagem
+
+      console.error("Falha ao gerar análise IA:", {
+        jogadorId: id,
+        modelo: process.env.GEMINI_MODEL,
+        tipo: detalhe?.name,
+        status: detalhe?.status,
+        mensagem: mensagemSegura,
+      })
+
       res.status(503).json({
         erro: "Não foi possível gerar a análise IA agora. O cadastro foi preservado. Tente novamente em alguns minutos.",
       })

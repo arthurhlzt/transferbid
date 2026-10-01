@@ -542,11 +542,26 @@ function editarJogador(jogador: Jogador) {
                     </button>
                     <button
                       type="button"
+                      className="btn-icone"
                       disabled={salvando || gerandoIA !== null}
                       onClick={() => editarJogador(j)}
                       aria-label={`Editar ${j.nome}`}
-                    >
-                      Editar
+                      title="Editar jogador"
+                      >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                        >
+                          <path d="m16 3 5 5" />
+                          <path d="M4 15 15.5 3.5a3.54 3.54 0 0 1 5 5L9 20l-6 1 1-6Z" />
+                      </svg>
                     </button>
                     <button
                       type="button"

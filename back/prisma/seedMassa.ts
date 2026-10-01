@@ -4,14 +4,6 @@ import { prisma } from "../lib/prisma"
 import { responderProposta } from "../services/propostaServices"
 import { buscarDadosComGemini } from "../services/iaServices"
 
-// Este script gera VÁRIOS registros de uma vez, para que a Dashboard (gráficos)
-// tenha dados suficientes para ficar interessante. Rode com: npm run seed:massa
-//
-// Por padrão ele NÃO chama a IA para todos os jogadores (para não gastar cota da
-// API gratuita do Gemini) — apenas para os 3 primeiros. Os demais recebem dados
-// "de mentirinha" (mock), como fariam registros reais aguardando processamento.
-// Se quiser consultar a IA para todos, troce CONSULTAR_IA_PARA_TODOS para true.
-
 const CONSULTAR_IA_PARA_TODOS = false
 
 const nomes = [
@@ -46,7 +38,6 @@ async function main() {
 
   const senhaHash = await bcrypt.hash(process.env.DEMO_PASSWORD, 10)
 
-  // Cria mais alguns clubes (clientes) de exemplo
   const clubes = []
   for (let i = 0; i < 6; i++) {
     const clube = await prisma.clube.upsert({
@@ -62,7 +53,6 @@ async function main() {
     clubes.push(clube)
   }
 
-  // Cria vários jogadores
   const jogadoresCriados = []
   for (let i = 0; i < nomes.length; i++) {
     const nome = nomes[i]
@@ -85,7 +75,6 @@ async function main() {
       },
     })
 
-    // Enriquece só os 3 primeiros com a IA de verdade (ou todos, se a flag estiver true)
     if (i < 3 || CONSULTAR_IA_PARA_TODOS) {
       try {
         const dadosIA = await buscarDadosComGemini(nome, idade, posicao.nome, clubeAtual)
@@ -104,8 +93,6 @@ async function main() {
         console.log(`Falha ao consultar IA para ${nome}:`, erro.message)
       }
     } else {
-      // Dado ILUSTRATIVO (não vem da IA) — fica com analiseIA=false por padrão,
-      // e o front-end mostra um aviso diferente para deixar isso claro ao usuário.
       await prisma.jogador.update({
         where: { id: jogador.id },
         data: {
@@ -122,7 +109,6 @@ async function main() {
     console.log(`Jogador criado (${i + 1}/${nomes.length}): ${nome}`)
   }
 
-  // Cria várias propostas cruzando clubes x jogadores
   let totalPropostas = 0
   for (const clube of clubes) {
     const quantidade = 1 + Math.floor(Math.random() * 4)

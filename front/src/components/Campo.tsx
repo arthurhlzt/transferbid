@@ -1,5 +1,3 @@
-// Campo de formulário com label permanente (não some ao digitar, ao contrário do
-// placeholder) e mensagem de erro logo abaixo do próprio campo.
 interface CampoProps {
   label: string
   htmlFor: string

@@ -12,9 +12,6 @@ interface ClubeContextData {
 
 const ClubeContext = createContext<ClubeContextData>({} as ClubeContextData)
 
-// Guarda o TOKEN (credencial de verdade) e o id do clube (exigido pelo trabalho,
-// requisito 5) no LocalStorage. O id sozinho nunca é aceito pela API como prova
-// de identidade — quem autentica as requisições é sempre o token no header.
 const TOKEN_KEY = "clubeToken"
 const ID_KEY = "clubeKey"
 
@@ -22,8 +19,6 @@ export function ClubeProvider({ children }: { children: ReactNode }) {
   const [clube, setClube] = useState<Clube | null>(null)
   const [carregando, setCarregando] = useState(true)
 
-  // Ao iniciar o app, tenta recuperar o token salvo no LocalStorage e validar a
-  // sessão consultando os dados do PRÓPRIO clube autenticado.
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY)
     const idSalvo = localStorage.getItem(ID_KEY)

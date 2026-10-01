@@ -12,7 +12,6 @@ const loginSchema = z.object({
   senha: z.string(),
 })
 
-// POST /admin/login
 router.post("/login", async (req, res) => {
   /*
     #swagger.tags = ['Admin']
@@ -54,7 +53,6 @@ router.post("/login", async (req, res) => {
   }
 })
 
-// GET /admin/dashboard -> dados para os gráficos de Visão Geral do Sistema (protegida)
 router.get("/dashboard", authAdmin, async (req, res) => {
   /*
     #swagger.tags = ['Admin']
@@ -99,9 +97,6 @@ router.get("/dashboard", authAdmin, async (req, res) => {
       total: item._count._all,
     }))
 
-    // Indicador de negociação: taxa de aceitação sobre as propostas já respondidas
-    // (pendentes não entram no cálculo, senão a taxa cairia artificialmente ao
-    // longo do tempo só por acumular propostas que ainda nem foram avaliadas).
     const aceitas = propostasPorStatus.find((p: any) => p.status === "ACEITA")?.total ?? 0
     const recusadas = propostasPorStatus.find((p: any) => p.status === "RECUSADA")?.total ?? 0
     const respondidas = aceitas + recusadas

@@ -1,5 +1,3 @@
-// Extrai mensagens de erro de uma resposta da API para exibir junto aos campos.
-// A API devolve { erro: <ZodError> } (com "issues") em validações, ou { erro: "texto" }.
 export function extrairErros(err: any): { campos: Record<string, string>; geral: string } {
   const dados = err?.response?.data
   const campos: Record<string, string> = {}

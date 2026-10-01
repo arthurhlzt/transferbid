@@ -5,10 +5,7 @@ export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
 })
 
-// Anexa o token JWT correto conforme a área da aplicação: rotas /admin/* usam o
-// token do administrador (adminAuth), o restante usa o token do clube logado
-// (clubeToken). Assim as chamadas autenticadas (propostas, cadastro de jogador,
-// dashboard etc.) não precisam repetir esse cabeçalho manualmente em cada tela.
+
 api.interceptors.request.use((config) => {
   const url = config.url || ''
   const clubeRoute = url.startsWith('/clubes') || url === '/propostas/minhas' ||
@@ -20,7 +17,7 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Se o token do admin expirar (401 dentro da área /admin), limpa a sessão e volta pro login.
+
 api.interceptors.response.use(
   (resposta) => resposta,
   (erro) => {

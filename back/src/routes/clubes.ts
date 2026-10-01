@@ -19,7 +19,6 @@ const loginSchema = z.object({
   senha: z.string(),
 })
 
-// POST /clubes -> cadastro de um novo clube (cliente do sistema)
 router.post("/", async (req, res) => {
   /*
     #swagger.tags = ['Clubes']
@@ -57,7 +56,6 @@ router.post("/", async (req, res) => {
   }
 })
 
-// POST /clubes/login -> autentica o clube e retorna um token JWT
 router.post("/login", async (req, res) => {
   /*
     #swagger.tags = ['Clubes']
@@ -102,7 +100,6 @@ router.post("/login", async (req, res) => {
   }
 })
 
-// GET /clubes/me -> recupera os dados do PRÓPRIO clube autenticado (via token)
 router.get("/me", authClube, async (req, res) => {
   /*
     #swagger.tags = ['Clubes']

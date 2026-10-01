@@ -55,7 +55,6 @@ export function JogadorDetalhe() {
 
     setEnviando(true)
     try {
-      // clubeId não é enviado: a API identifica o clube pelo token (Authorization).
       await api.post("/propostas", { jogadorId: jogador.id, valorOferta: Number(valorOferta), mensagem })
       setEnviado(true)
     } catch (e: any) {
@@ -89,7 +88,6 @@ export function JogadorDetalhe() {
       <p><Link to="/">← Voltar ao mercado</Link></p>
 
       <div className="detalhe-grid">
-        {/* Coluna esquerda: perfil e análise */}
         <div className="detalhe-principal">
           <ImgComFallback src={jogador.foto} alt={`Foto de ${jogador.nome}`} className="foto-grande" />
           <h1>{jogador.nome}</h1>
@@ -129,7 +127,6 @@ export function JogadorDetalhe() {
           )}
         </div>
 
-        {/* Coluna direita: valor, disponibilidade e proposta */}
         <aside className="detalhe-lateral">
           <p className="rotulo">Valor pedido</p>
           <p className="valor">R$ {Number(jogador.valorPedido).toLocaleString("pt-BR")}</p>

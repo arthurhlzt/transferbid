@@ -22,9 +22,6 @@ if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGINS) {
 app.use(cors({ origin: (origin, callback) => callback(null, !origin || origins.includes(origin)) }))
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
-// Documentação Swagger (gerada com `npm run swagger`, a partir dos comentários
-// #swagger.* nas rotas). Se o arquivo ainda não foi gerado, a API sobe normalmente
-// e /docs só fica disponível depois de rodar o comando.
 const swaggerOutputPath = path.resolve(process.cwd(), 'swagger-output.json')
 if (fs.existsSync(swaggerOutputPath)) {
   const swaggerDocument = JSON.parse(fs.readFileSync(swaggerOutputPath, 'utf-8'))

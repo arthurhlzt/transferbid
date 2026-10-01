@@ -1,5 +1,3 @@
-// Ícones SVG inline (traço), consistentes entre si. Sempre usados dentro de botões
-// que já têm aria-label/title, por isso ficam com aria-hidden.
 interface IconProps { size?: number; filled?: boolean }
 
 function Svg({ size = 18, filled = false, children }: IconProps & { children: React.ReactNode }) {

@@ -32,9 +32,6 @@ const destaqueSchema = z.object({
   destaque: z.boolean(),
 })
 
-// GET /jogadores -> lista completa, com filtros combináveis via query string
-// (destaque, nome, posicaoId, valorMaximo). Usada também para "destaques" via
-// ?destaque=true e para a busca separada por campo da Home.
 router.get("/", async (req, res) => {
   /*
     #swagger.tags = ['Jogadores']
@@ -124,7 +121,6 @@ router.get("/:id", async (req, res) => {
   }
 })
 
-// POST /jogadores -> cadastra o jogador (admin) e enriquece automaticamente com dados da IA (Gemini)
 router.post("/", authAdmin, async (req, res) => {
   /*
     #swagger.tags = ['Jogadores']
@@ -171,9 +167,6 @@ router.post("/", authAdmin, async (req, res) => {
 
     const posicao = await prisma.posicao.findUnique({ where: { id: Number(posicaoId) } })
 
-    // Consulta a IA para complementar automaticamente o cadastro (requisito 3).
-    // analiseIA só fica true quando a consulta realmente é feita com sucesso —
-    // isso evita confundir dado real de IA com conteúdo ilustrativo (ex.: dos seeds).
     let jogadorFinal = jogador
     try {
       const dadosIA = await buscarDadosComGemini(nome, idade, posicao?.nome as string, clubeAtual)
@@ -196,6 +189,85 @@ router.post("/", authAdmin, async (req, res) => {
     res.status(201).json(jogadorFinal)
   } catch (error) {
     res.status(400).json({ erro: "Não foi possível concluir a operação. Verifique os dados e tente novamente." })
+  }
+})
+
+const analisesEmAndamento = new Set<number>()
+
+router.post("/:id/analise-ia", authAdmin, async (req, res) => {
+  /*
+    #swagger.tags = ['Jogadores']
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.summary = 'Gera a análise IA de um jogador cadastrado'
+    #swagger.responses[200] = { description: 'Jogador com análise IA.' }
+    #swagger.responses[404] = { description: 'Jogador não encontrado.' }
+    #swagger.responses[409] = { description: 'Análise em andamento.' }
+    #swagger.responses[503] = { description: 'Falha ao gerar análise.' }
+  */
+
+  const id = Number(req.params.id)
+
+  if (analisesEmAndamento.has(id)) {
+    res.status(409).json({
+      erro: "A análise deste jogador já está em andamento. Aguarde.",
+    })
+    return
+  }
+
+  analisesEmAndamento.add(id)
+
+  try {
+    const jogador = await prisma.jogador.findUnique({
+      where: { id },
+      include: { posicao: true },
+    })
+
+    if (!jogador) {
+      res.status(404).json({ erro: "Jogador não encontrado." })
+      return
+    }
+
+    if (jogador.analiseIA) {
+      res.json(jogador)
+      return
+    }
+
+    let dadosIA
+
+    try {
+      dadosIA = await buscarDadosComGemini(
+        jogador.nome,
+        jogador.idade,
+        jogador.posicao.nome,
+        jogador.clubeAtual,
+      )
+    } catch {
+      res.status(503).json({
+        erro: "Não foi possível gerar a análise IA agora. O cadastro foi preservado. Tente novamente em alguns minutos.",
+      })
+      return
+    }
+
+    const atualizado = await prisma.jogador.update({
+      where: { id },
+      data: {
+        pontosFortes: JSON.stringify(dadosIA.pontosFortes),
+        pontosFracos: JSON.stringify(dadosIA.pontosFracos),
+        estiloDeJogo: dadosIA.estiloDeJogo,
+        jogadorComparavel: dadosIA.jogadorComparavel,
+        potencialMercado: dadosIA.potencialMercado,
+        analiseIA: true,
+      },
+      include: { posicao: true },
+    })
+
+    res.json(atualizado)
+  } catch {
+    res.status(500).json({
+      erro: "Não foi possível salvar a análise. Atualize a lista e tente novamente.",
+    })
+  } finally {
+    analisesEmAndamento.delete(id)
   }
 })
 
@@ -245,8 +317,6 @@ router.put("/:id", authAdmin, async (req, res) => {
   }
 })
 
-// PATCH /jogadores/:id/destaque -> alterna somente o destaque, sem exigir o objeto inteiro
-// (evita o bug de reenviar valorPedido como string e cair na validação de número)
 router.patch("/:id/destaque", authAdmin, async (req, res) => {
   /*
     #swagger.tags = ['Jogadores']

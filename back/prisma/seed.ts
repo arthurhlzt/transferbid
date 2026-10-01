@@ -3,10 +3,6 @@ import bcrypt from "bcryptjs"
 import { prisma } from "../lib/prisma"
 import { buscarDadosComGemini } from "../services/iaServices"
 
-// Cadastra um jogador e tenta enriquecer com uma consulta REAL ao Gemini.
-// Se a GEMINI_API_KEY não estiver configurada (ou a chamada falhar), o jogador
-// é criado mesmo assim, só que sem os campos de análise (analiseIA fica false) —
-// evita fingir que existe uma análise de IA quando não existe.
 async function criarJogadorComIA(data: {
   nome: string; idade: number; nacionalidade: string; clubeAtual: string
   pernaBoa: "DESTRA" | "CANHOTA" | "AMBIDESTRO"; valorPedido: number; foto: string
@@ -42,7 +38,7 @@ async function criarJogadorComIA(data: {
 async function main() {
   const emailAdmin = (process.env.ADMIN_EMAIL || 'admin@agencia.com').trim().toLowerCase()
   const senhaAdmin = process.env.ADMIN_PASSWORD
-  if (!senhaAdmin || senhaAdmin.length < 12) throw new Error('ADMIN_PASSWORD deve ter pelo menos 12 caracteres')
+  if (!senhaAdmin || senhaAdmin.length < 8) throw new Error('ADMIN_PASSWORD deve ter pelo menos 8 caracteres')
   const demo = process.env.SEED_DEMO === 'true'
   if (demo && (!process.env.DEMO_PASSWORD || process.env.DEMO_PASSWORD.length < 12)) throw new Error('Configure DEMO_PASSWORD com pelo menos 12 caracteres')
   const senhaHash = await bcrypt.hash(senhaAdmin, 10)

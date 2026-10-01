@@ -31,7 +31,6 @@ const tooltipStyle = {
   background: "#1b232c", border: "1px solid rgba(234,239,234,0.12)", borderRadius: 8, color: "#eaefea",
 }
 
-// Barras horizontais: comparam categorias com nome legível e o valor escrito ao fim da barra
 function BarrasHorizontais({ dados, rotulo, cor }: { dados: { nome: string; total: number }[]; rotulo: string; cor: string }) {
   const ordenados = [...dados].sort((a, b) => b.total - a.total)
   return (
@@ -73,7 +72,6 @@ export function Dashboard() {
       <h2>Visão Geral do Sistema</h2>
       <p className="subtitulo">Acompanhe o andamento das negociações e o perfil do seu mercado.</p>
 
-      {/* Indicadores de negociação primeiro */}
       <div className="cards-resumo">
         <div className="card destaque">
           <strong>{pendentes}</strong>

@@ -39,8 +39,6 @@ function extrairToken(req: Request): string | null {
   return cabecalho.slice('Bearer '.length)
 }
 
-// Exige um clube autenticado. Preenche req.clubeId a partir do token (nunca confie
-// em um clubeId enviado pelo corpo da requisição para operações sensíveis).
 export function authClube(req: Request, res: Response, next: NextFunction) {
   const token = extrairToken(req)
   if (!token) {
@@ -58,7 +56,6 @@ export function authClube(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-// Exige um administrador autenticado.
 export function authAdmin(req: Request, res: Response, next: NextFunction) {
   const token = extrairToken(req)
   if (!token) {

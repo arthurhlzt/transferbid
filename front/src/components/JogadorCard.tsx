@@ -13,7 +13,6 @@ const STATUS_CLASSE: Record<string, string> = {
   TRANSFERIDO: "recusada",
 }
 
-// Resumo curto só quando a análise veio de uma consulta real à IA
 function resumoIA(jogador: Jogador): string | null {
   if (!jogador.analiseIA || !jogador.potencialMercado) return null
   const base = `IA · Potencial ${jogador.potencialMercado}`

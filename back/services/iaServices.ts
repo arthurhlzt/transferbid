@@ -9,7 +9,7 @@ const analiseSchema = z.object({
   potencialMercado: z.string().min(1).max(30),
 })
 
-// Schema com os campos que a IA deve retornar sobre o jogador
+
 const schemaJogador = {
   type: 'OBJECT',
   properties: {
@@ -46,7 +46,19 @@ export async function buscarDadosComGemini(
   clubeAtual: string,
 ) {
   if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY não configurada')
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, httpOptions: { timeout: 30000 } })
+  const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: {
+    timeout: 30000,
+    retryOptions: {
+      attempts: 3,
+      initialDelay: 1,
+      maxDelay: 2,
+      expBase: 2,
+      httpStatusCodes: [429, 500, 502, 503, 504],
+    },
+  },
+})
   const resposta = await ai.models.generateContent({
     model: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
     contents: `Jogador de futebol: ${nome}, ${idade} anos, posição ${posicao}, atualmente no ${clubeAtual}.

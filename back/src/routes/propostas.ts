@@ -14,8 +14,6 @@ router.param('id', (req, res, next, id) => {
   next()
 })
 
-// clubeId NÃO vem mais do corpo da requisição: é sempre extraído do token (req.clubeId),
-// pra evitar que um clube autenticado faça propostas em nome de outro.
 const propostaSchema = z.object({
   valorOferta: z.number().max(9999999999.99).positive({ message: "Valor da oferta deve ser maior que zero" }),
   mensagem: z.string().trim().max(5000).min(3, { message: "Mensagem deve possuir, no mínimo, 3 caracteres" }),
@@ -27,10 +25,8 @@ const respostaSchema = z.object({
   status: z.enum(StatusProposta),
 })
 
-// Campos do clube seguros para expor publicamente (nunca incluir "senha")
 const clubePublico = { id: true, nome: true, pais: true, email: true } as const
 
-// GET /propostas -> listagem geral (admin)
 router.get("/", authAdmin, async (req, res) => {
   /*
     #swagger.tags = ['Propostas']
@@ -51,7 +47,6 @@ router.get("/", authAdmin, async (req, res) => {
   }
 })
 
-// GET /propostas/minhas -> propostas do PRÓPRIO clube autenticado
 router.get("/minhas", authClube, async (req, res) => {
   /*
     #swagger.tags = ['Propostas']
@@ -73,7 +68,6 @@ router.get("/minhas", authClube, async (req, res) => {
   }
 })
 
-// POST /propostas -> o clube autenticado faz uma proposta por um jogador
 router.post("/", authClube, async (req, res) => {
   /*
     #swagger.tags = ['Propostas']
@@ -113,7 +107,6 @@ router.post("/", authClube, async (req, res) => {
   }
 })
 
-// PUT /propostas/:id -> admin responde/atualiza o status da proposta
 router.put("/:id", authAdmin, async (req, res) => {
   /*
     #swagger.tags = ['Propostas']

@@ -49,6 +49,7 @@ export function Jogadores() {
   const [erroCarga, setErroCarga] = useState(false)
   const [gerandoIA, setGerandoIA] = useState<number | null>(null)
   const [avisoIA, setAvisoIA] = useState("")
+  const [jogadorEmEdicao, setJogadorEmEdicao] = useState<Jogador | null>(null)
   const gerandoIARef = useRef(false)
 
   function carregar() {
@@ -106,6 +107,35 @@ export function Jogadores() {
     }
   }
 
+function limparFormulario() {
+  setJogadorEmEdicao(null)
+  setForm(formVazio)
+  setErros({})
+  setErroGeral("")
+}
+
+function editarJogador(jogador: Jogador) {
+  setJogadorEmEdicao(jogador)
+
+  setForm({
+    nome: jogador.nome,
+    idade: String(jogador.idade),
+    nacionalidade: jogador.nacionalidade,
+    clubeAtual: jogador.clubeAtual,
+    pernaBoa: jogador.pernaBoa,
+    valorPedido: String(jogador.valorPedido),
+    foto: jogador.foto,
+    posicaoId: String(jogador.posicaoId),
+  })
+
+  setErros({})
+  setErroGeral("")
+  setAvisoIA("")
+  setMostrarForm(true)
+
+  window.scrollTo({ top: 0, behavior: "smooth" })
+}
+
   async function salvar(evento: React.FormEvent) {
     evento.preventDefault()
     setErroGeral("")
@@ -152,20 +182,35 @@ export function Jogadores() {
     setAvisoIA("")
 
     try {
-      const resposta = await api.post<Jogador>("/jogadores", {
+      const dados = {
         ...form,
         idade,
         valorPedido: Number(form.valorPedido),
         posicaoId: Number(form.posicaoId),
-      })
+      }
 
-      setAvisoIA(
-        resposta.data.analiseIA
-          ? "Jogador cadastrado com análise IA."
-          : "Jogador cadastrado sem análise IA. Use Gerar análise IA para tentar novamente.",
-      )
+      if (jogadorEmEdicao) {
+        await api.put(`/jogadores/${jogadorEmEdicao.id}`, {
+          ...dados,
+          status: jogadorEmEdicao.status,
+          destaque: jogadorEmEdicao.destaque,
+          videoDestaque: jogadorEmEdicao.videoDestaque ?? null,
+        })
 
-      setForm(formVazio)
+        setAvisoIA(
+          "Jogador atualizado. A análise IA existente não foi recalculada.",
+        )
+      } else {
+        const resposta = await api.post<Jogador>("/jogadores", dados)
+
+        setAvisoIA(
+          resposta.data.analiseIA
+            ? "Jogador cadastrado com análise IA."
+            : "Jogador cadastrado sem análise IA. Use Gerar análise IA para tentar novamente.",
+        )
+      }
+
+      limparFormulario()
       setMostrarForm(false)
       carregar()
     } catch (erro: any) {
@@ -212,13 +257,17 @@ export function Jogadores() {
       <div className="titulo-com-acao">
         <h2>Cadastro de Jogadores</h2>
 
-        <button
-          type="button"
-          disabled={salvando}
-          onClick={() => setMostrarForm((atual) => !atual)}
-        >
-          {mostrarForm ? "Fechar formulário" : "Novo jogador"}
-        </button>
+      <button
+        type="button"
+         disabled={salvando}
+         onClick={() => {
+        limparFormulario()
+        setAvisoIA("")
+        setMostrarForm((aberto) => !aberto)
+        }}
+      >
+  {mostrarForm ? "Cancelar" : "Novo jogador"}
+</button>
       </div>
 
       {mostrarForm && (
@@ -227,6 +276,11 @@ export function Jogadores() {
           onSubmit={salvar}
           noValidate
         >
+          <h3 style={{ gridColumn: "1 / -1" }}>
+           {jogadorEmEdicao
+             ? `Editar jogador: ${jogadorEmEdicao.nome}`
+             : "Novo jogador"}
+          </h3>
           <Campo
             label="Nome"
             htmlFor="j-nome"
@@ -362,8 +416,12 @@ export function Jogadores() {
 
           <button type="submit" disabled={salvando}>
             {salvando
-              ? "Salvando e consultando a IA..."
-              : "Salvar jogador"}
+            ? jogadorEmEdicao
+            ? "Salvando alterações..."
+            : "Salvando e consultando a IA..."
+            : jogadorEmEdicao
+            ? "Salvar alterações"
+            : "Salvar jogador"}
           </button>
         </form>
       )}
@@ -482,7 +540,14 @@ export function Jogadores() {
                     >
                       <IconStar filled={j.destaque} />
                     </button>
-
+                    <button
+                      type="button"
+                      disabled={salvando || gerandoIA !== null}
+                      onClick={() => editarJogador(j)}
+                      aria-label={`Editar ${j.nome}`}
+                    >
+                      Editar
+                    </button>
                     <button
                       type="button"
                       className="btn-icone perigo"
